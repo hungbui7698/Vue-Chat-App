@@ -1,13 +1,11 @@
 <template>
   <div id="app">
-    <!-- Login section -->
     <div v-if="!name">
       <Login @updateUsername="updateUsername"/>
     </div>
 
-    <!-- Chat section -->
     <div class="view chat" v-else>
-      <chat-view :userName="userName" :name="name" @Logout="Logout"/>
+      <ChatView :userName="userName" :name="name" @Logout="Logout"/>
     </div>
   </div>
 </template>

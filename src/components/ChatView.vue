@@ -1,36 +1,31 @@
 <template>
-    <div>
+    <div class="chatbox">
         <header>
         <h3>Chat</h3>
         <h5>Welcome {{ name }}!</h5>
         <button @click="Logout" >Log out</button>
         </header>
 
-        <ul class="card-body">
-            <li
-            :class="(message.username == name ? 'message current-user' : 'message')"
+        <div class="card-body">
+            <div
             v-for="message in messages"
-            :key="message.key"
+            :key="message.id"
             >
-                <div>
-                    <span v-if="message.username == name" class="username">You</span>
-                    <span v-else class="username"> {{ message.username }} </span>
-                    <p :class="(message.username == name ? ' current-content' : 'content')">{{ message.text }}</p>
-                </div>
-            </li>
-        </ul>
-        <footer>
-        <input v-model="showMessage" type="text"/>
-        <button @click="sendMessage">Send</button>
-        </footer>
+                <BubbleView :message="message" :name="name" @deleteMessage="deleteMessage"/>
+            </div>
+        </div>
+        <div class="sendmessage" :onsubmit="sendMessage">
+            <input v-model="showMessage" type="text" value="Send message..."/>
+            <button @click="sendMessage">Send</button>
+        </div>
     </div>
 </template>
-<script src="https://cdn.jsdelivr.net/npm/vue-chat-scroll/dist/vue-chat-scroll.min.js"></script>
+
 <script>
-
-
+import BubbleView from "./BubbleView.vue"
 import fire from "../fire.js";
     export default {
+        components: { BubbleView },
         name: "ChatView",
         data() {
             return {
@@ -48,6 +43,10 @@ import fire from "../fire.js";
         },
 
         methods: {
+            deleteMessage(id){
+                fire.database().ref("messages").child(id).remove();
+            },
+
             sendMessage() {
                 const message = {
                     text: this.showMessage,
@@ -69,62 +68,71 @@ import fire from "../fire.js";
         mounted() {
             const itemsRef = fire.database().ref("messages");
             itemsRef.on("value", snapshot => {
-            let data = snapshot.val();
-            let messages = [];
-            Object.keys(data).forEach(key => {
-                messages.push({
-                id: key,
-                username: data[key].username,
-                text: data[key].text
+                let data = snapshot.val();
+                let messages = [];
+                if(data){
+                
+                Object.keys(data).forEach(key => {
+                    messages.push({
+                    id: key,
+                    username: data[key].username,
+                    text: data[key].text
+                    });
                 });
-            });
-            this.messages = messages;
+                }
+                this.messages = messages;
             });
          }
     }
 </script>
 <style>
-* {
-	font-family: Avenir, Helvetica, Arial, sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	margin: 0;
-	padding: 0;
+.chatbox{
+    width: 50%;
+    height: 600px;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28);
+}
 
-}
 .card-body {
-  width: 50%;
-  height: 50vh;
-  overflow-y: auto;
+    flex: auto;
+    overflow: auto;
 }
-.message {
-  display: flex;
-  margin-bottom: 15px;
-  max-width:90%;
+
+.sendmessage{
+    flex: 0 0 auto;
+    height: 60px;
+    background: #e5e5ea;
+    border-top: 1px solid #2671ff;
+    box-shadow: 0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28);
 }
-.username {
-        color: #888;
-        font-size: 16px;
-        margin-bottom: 5px;
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-.content {		
-    padding: 10px 20px;
-    background-color: #F3F3F3;
-    border-radius: 9px;
-    color: #333;
-    font-size: 18px;
-    word-break: break-word;
-    max-width:100%;
+
+.sendmessage input{
+    height: 59px;
+    line-height: 60px;
+    outline: 0 none;
+    border: none;
+    width: calc(100% - 60px);
+    color: black;
+    text-indent: 10px;
+    font-size: 12pt;
+    padding: 0;
+    background: #e5e5ea;
 }
-.current-content{					
-    padding: 10px 20px;
-    background-color: #5b87da;
-    border-radius: 9px;
-    color: #333;
-    font-size: 18px;
-    word-break: break-word;
-    max-width:100%;
+.sendmessage button {
+    float: right;
+    border: none;
+    background: #248BF5;
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    padding: 2px 0 0 0;
+    margin: 10px;
+    cursor: pointer;
+}
+.sendmessage button:hover {
+    box-shadow: 0 8px 17px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
 }
 </style>
